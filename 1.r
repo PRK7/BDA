@@ -1,3 +1,9 @@
+install.packages('factoextra')
+install.packages('tidyverse')
+install.packages('ggplot2')
+install.packages('gridExtra')
+
+
 newiris=iris
 head(newiris)
 pairs(newiris)
