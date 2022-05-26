@@ -1,0 +1,127 @@
+https://www.digitalocean.com/community/tutorials/how-to-install-hadoop-in-stand-alone-mode-on-ubuntu-18-04
+
+Practical :  Install Hadoop in Stand-Alone Mode on Ubuntu
+Prerequisites : An Ubuntu server VM with a user having sudo privileges
+
+Step 1 — Installing Java
+Step 2 — Installing Hadoop
+Step 3 — Configuring Hadoop’s Java Home
+Step 4 — Running Hadoop
+
+
+Step 1 — Installing Java
+To get started, we’ll update our package list:
+sudo apt update
+ 
+Next, we’ll install OpenJDK, the default Java Development Kit on Ubuntu 18.04:
+sudo apt install default-jdk
+
+Once the installation is complete, let’s check the version.
+java -version
+This output verifies that OpenJDK has been successfully installed.
+===========================================================================
+Create a new user- hadoop15
+sudo adduser hadoop15
+
+Give all priviliges to hadoop15
+sudo nano /etc/sudoers
+
+Add the line
+user_name ALL=(ALL:ALL)  ALL
+
+switch user to hadoop15
+su - hadoop15
+The prompt shoud look like this - hadoop15@ubuntu:/
+
+It is also required to set up key-based ssh 
+ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod 0600 ~/.ssh/authorized_keys
+
+verify key based login
+ssh localhost
+=======================================================================
+
+Step 2 — Installing Hadoop
+Visit the Apache Hadoop Releases page to find the most recent stable release.
+https://hadoop.apache.org/release/3.2.2.html
+we’ll install Hadoop 3.2.2. 
+
+There are 2 options to download and install hadoop
+1. Download and install using one single command
+wget https://hadoop.apache.org/release/3.2.2.html/hadoop-3.2.2.tar.gz
+This will download the mentioned version and then install it on your system
+
+2. If the above does not work then go to the webpage of Apache Hadoop, download it manually and then install it
+visit website 
+https://hadoop.apache.org/release/3.2.2.html 
+Click button that says "Download tar.gz" (download the latest version)
+
+
+copy the existing setup to /home/hadoop/
+sudo mv /home/udit/Desktop/Prac/setups/hadoop-3.2.0.tar.gz /home/hadoop
+
+extract hadoop using the following command 
+we’ll use the tar command with the -x flag to extract, -z to uncompress, -v for verbose output, and -f to specify that we’re extracting from a file. 
+tar xzvf hadoop-3.2.0.tar.gz
+
+
+
+Set path for Java & Hadoop
+sudo nano .bashrc
+export JAVA_HOME=/lib/jvm/java-11-openjdk-amd64
+export PATH=$PATH:$JAVA_HOME/bin
+export HADOOP_HOME=/home/hadoop/hadoop-3.2.0
+export HADOOP_COMMON_HOME=/home/hadoop/hadoop-3.2.0
+export HADOOP_MAPRED_HOME=/home/hadoop/hadoop-3.2.0
+export PATH=$PATH:$HADOOP_COMMON_HOME/bin
+export PATH=$PATH:$HADOOP_COMMON_HOME/sbin
+
+After doing all changes and saving the file run the following command to make changes through the .bashrc file.
+source ~/.bashrc
+
+
+Checking of java and hadoop
+Command: java -version
+Command: hadoop version
+
+Step 3 — Configuring Hadoop’s Java Home
+Hadoop requires that you set the path to Java, either as an environment variable or in the Hadoop configuration file.
+
+
+To Configure Hadoop’s Java Home, begin by opening hadoop-env.sh
+sudo nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+
+Add the following line at the end of .sh file
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
+
+to save the changes in the file, press ctrl and x together.
+then press Y
+then press Enter key
+
+Step 4 — Running Hadoop
+Now we should be able to run Hadoop:
+$HADOOP_HOME/bin/hadoop
+
+The help means we’ve successfully configured Hadoop to run in stand-alone mode.
+Next we will create a directory called input in our home directory and copy Hadoop’s configuration files into it to use those files as our data.
+mkdir ~/input
+cp $HADOOP_HOME/etc/hadoop/*.xml ~/input
+--------------------------------------------------------------------------------
+Next, we can use the following command to run the MapReduce hadoop-mapreduce-examples program, a Java archive with several options. 
+We’ll invoke its grep program, one of the many examples included in hadoop-mapreduce-examples, followed by the input directory, input and the output directory grep_example. 
+The MapReduce grep program will count the matches of a literal word or regular expression. 
+Finally, we’ll supply the regular expression allowed[.]* to find occurrences of the word allowed within or at the end of a declarative sentence. 
+The expression is case-sensitive, so we wouldn’t find the word if it were capitalized at the beginning of a sentence:
+$HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.2.0.jar grep ~/input ~/grep_example 'allowed[.]*'
+
+When the task completes, it provides a summary of what has been processed and errors it has encountered, but this doesn’t contain the actual results.
+
+Results are stored in the output directory and can be checked by running cat on the output directory:
+cat ~/grep_example/*
+
+
+
+sudo mkdir -p /usr/local/hadoop/etc/hadoop/datanode
+sudo mkdir -p /usr/local/hadoop/etc/hadoop/namenode
+
