@@ -1,0 +1,225 @@
+Practical :  Install Hadoop in Pseudo Distributed Mode on Ubuntu
+================================================================
+Prerequisites
+================================================================
+An Ubuntu server VM with a user having sudo privileges
+
+To get started, we’ll update our package list:
+sudo apt update
+
+Next, we’ll install OpenJDK, the default Java Development Kit on Ubuntu 18.04:
+sudo apt install default-jdk
+
+Once the installation is complete, let’s check the version.
+java -version
+This output verifies that OpenJDK has been successfully installed.
+
+
+Create a new user- hadoop
+sudo adduser hadoop
+
+Give all priviliges to hadoop
+sudo nano /etc/sudoers
+
+Add the line
+user_name ALL=(ALL:ALL)  ALL
+
+switch user to hadoop15
+su - hadoop
+The prompt shoud look like this - hadoop@ubuntu:/
+
+It is also required to set up key-based ssh 
+ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod 0600 ~/.ssh/authorized_keys
+
+verify key based login
+ssh localhost
+=========================================================
+Step 2 — Downloading & Installing Hadoop
+Visit the Apache Hadoop Releases page to find the most recent stable release.
+https://hadoop.apache.org/release/3.2.0.html
+we’ll install Hadoop 3.2.0. 
+
+There are 2 options to download and install hadoop
+1. Download and install using one single command
+wget https://hadoop.apache.org/release/3.2.0.html/hadoop-3.2.0.tar.gz
+This will download the mentioned version and then install it on your system
+
+2. If the above does not work then go to the webpage of Apache Hadoop, download it manually and then install it
+visit website 
+https://hadoop.apache.org/release/3.2.0.html 
+Click button that says "Download tar.gz" (download the latest version)
+
+install hadoop using the following command 
+we’ll use the tar command with the -x flag to extract, -z to uncompress, -v for verbose output, and -f to specify that we’re extracting from a file. 
+tar xzvf hadoop-3.2.0.tar.gz
+
+Finally, we’ll move the extracted files into /usr/local, the appropriate place for locally installed software. 
+
+sudo mv hadoop-3.2.0 /home/hadoop
+
+verify by navigating to /home/hadoop
+
+===================================================================================
+Update 6 important files
+===================================================================================
+1.   .bashrc
+===================================================================================
+Set path for Java & Hadoop
+sudo nano .bashrc
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+export PATH=$PATH:$JAVA_HOME/bin
+export HADOOP_HOME = /home/hadoop15/hadoop-3.2.0
+export HADOOP_INSTALL = $HADOOP_HOME
+export HADOOP_COMMON_HOME = $HADOOP_HOME
+export HADOOP_MAPRED_HOME = $HADOOP_HOME
+export HADOOP_HDFS_HOME = $HADOOP_HOME
+export HADOOP_YARN_HOME = $HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR = $HADOOP_HOME/lib/native
+export PATH = $PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
+
+
+execute by following line
+source ~/.bashrc
+
+Checking of java and hadoop
+Command: java -version
+Command: hadoop version
+=================================================================================
+2 hadoop-env.sh - Configuring Hadoop’s Java Home
+=================================================================================
+To Configure Hadoop15’s Java Home, begin by opening hadoop-env.sh
+sudo nano /home/hadoop/hadoop-3.2.0/etc/hadoop/hadoop-env.sh 
+
+or use the variable $HADOOP_HOME
+sudo nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh 
+
+Add the following line at the end of .sh file
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+=================================================================================
+3 core-site.xml
+=================================================================================
+sudo nano $HADOOP_HOME/etc/hadoop/core-site.xml
+
+<property>
+	<name>hadoop.tmp.dir</name>
+	<value>/home/hadoop/tmpdata</value>
+	<description>A base for other temporarary directories</description>
+</property>
+
+<property>
+	<name>fs.default.name</name>
+	<value>hdfs://localhost:9000</value>
+	<description>The name of the default file system.</description>
+</property>
+
+=================================================================================
+4 hdfs-site.xml
+=================================================================================
+sudo nano $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+<property>
+	<name>dfs.data.dir</name>
+	<value>/home/hadoop/dfsdata/namenode</value>
+	<description>Location of namenode</description>
+</property>
+
+<property>
+	<name>dfs.data.dir</name>
+	<value>/home/hadoop/dfsdata/datanode</value>
+	<description>Location of datanode</description>
+</property>
+
+<property>
+	<name>dfs.replication</name>
+	<value>1</value>
+	<description>Replication Factor</description>
+</property>
+
+=================================================================================
+5 mapred-site.xml
+=================================================================================
+sudo nano $HADOOP_HOME/etc/hadoop/mapred-site.xml
+<property>
+	<name>mapreduce.framework.name</name>
+	<value>yarn</value>
+	<description>Name of my mapreduce framework</description>
+</property>
+
+
+=================================================================================
+6 yarn-site.xml
+=================================================================================
+sudo nano $HADOOP_HOME/etc/hadoop/yarn-site.xml
+
+<property>
+<name>yarn.nodemanager.aux-services</name>
+<value>mapreduce_shuffle</value>
+</property>
+
+<property>
+<name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+<value>org.apache.hadoop.mapred.ShuffleHandler</value>
+</property>
+
+<property>
+<name>yarn.resourcemanager.hostname</name>
+<value>127.0.0.1</value>
+</property>
+
+<property>
+<name>yarn.acl.enable</name>
+<value>0</value>
+</property>
+
+<property>
+<name>yarn.nodemanager.env-whitelist</name>
+<value>JAVA_HOME, HADOOP_COMMON_HOME, HADOOP_HDFS, HADOOP_YARN</value>
+</property>
+
+
+=================================================================================
+Format Namenode
+=================================================================================
+move to the /bin folder
+cd /home/hadoop/hadoop-3.2.0/bin
+
+Now format the namenode using the following command
+hdfs namenode -format
+
+=================================================================================
+Start the namenode, datanode
+=================================================================================
+move to the /sbin folder
+/home/hadoop/hadoop-3.2.0/sbin
+start-dfs.sh
+start-yarn.sh
+
+
+=================================================================================
+Start the task tracker and job tracker // Skip in case file not present
+=================================================================================
+start-mapred.sh
+
+
+=================================================================================
+To check if Hadoop started correctly
+=================================================================================
+jps
+
+
+=================================================================================
+Copy file from local system to hdfs
+=================================================================================
+hdfs dfs -put source 
+
+check using ls
+hdfs dfs -ls
+
+
+=================================================================================
+Check with browser
+=================================================================================
+DFS overview - http://localhost:9870/ 
+Datanode     - http://localhost:9864/
+
